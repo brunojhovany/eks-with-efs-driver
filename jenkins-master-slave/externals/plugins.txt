@@ -1,0 +1,15 @@
+git-clientgit
+github-api
+github-oauth
+github
+MSBuild
+ssh-slaves
+workflow-aggregator
+ws-cleanup
+kubernetes
+kubernetes-credentials
+kubernetes-client-api
+docker-plugin
+docker-commons
+docker-java-api
+nodelabelparameter

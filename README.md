@@ -12,4 +12,6 @@ In this repository there is an example of how to deploy a cluster of eks and efs
 
 ```bash
 export KUBE_CONFIG_PATH=/path/to/kubeconfig
+aws efs describe-file-systems --query "FileSystems[*].FileSystemId" --output text
+
 ```
