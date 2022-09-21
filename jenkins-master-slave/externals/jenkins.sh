@@ -59,8 +59,24 @@ EOF
 
   # Restart
   # systemctl restart jenkins
-  echo "installing the Jenkins cli ..."
-  wget http://127.0.0.1:8080/jnlpJars/jenkins-cli.jar -O /var/jenkins_home/jenkins-cli.jar
+  echo "Waiting for installing the Jenkins cli ..."
+  while (( 1 )); do
+      wget http://127.0.0.1:8080/jnlpJars/jenkins-cli.jar -O /var/jenkins_home/jenkins-cli.jar
+      if [[ -f "/var/jenkins_home/jenkins-cli.jar" ]]; then
+          break
+          echo "jenkins cli already installed"
+      fi
+      sleep 10
+  done
+  
+  echo "Waiting for Jenkins to generate admin user's initial password ..."
+  while (( 1 )); do
+      if [[ -f "/var/jenkins_home/secrets/initialAdminPassword" ]]; then
+          break
+      fi
+      sleep 10
+  done
+
   PASSWORD=$(cat /var/jenkins_home/secrets/initialAdminPassword)
   java -jar /var/jenkins_home/jenkins-cli.jar -s http://127.0.0.1:8080 -auth admin:$PASSWORD restart
   sleep 10

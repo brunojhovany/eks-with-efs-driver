@@ -28,40 +28,28 @@ resource "kubernetes_deployment" "jenkins-master" {
       
       }
       spec {
-        # init_container {
-        #   name = "copy-defualt-config"
-        #   image = var.jenkins_docker_image
-        #   image_pull_policy = "IfNotPresent"
-        #   command = [ 
-        #     "sh",
-        #     "/var/jenkins_config/apply_config.sh"
-        #   ]
-        #   env {
-        #     name = "ADMIN_PASSWORD"
-        #     value = var.jenkins_master_password
-        #   }
-        #   env {
-        #     name = "ADMIN_USER"
-        #     value = var.jenkins_master_username
-        #   }
-        #   volume_mount {
-        #     mount_path = "/var/jenkins_home"
-        #     name = "jenkins-home"
-        #   }
-        #   volume_mount {
-        #     mount_path = "/var/jenkins_config"
-        #     name = "jenkins-config"
-        #   }
-        #   volume_mount {
-        #     mount_path = "/usr/share/jenkins/ref/secrets/"
-        #     name = "secrets-dir"
-        #   }
-        #   volume_mount {
-        #     mount_path = "/var/jenkins_plugins"
-        #     name = "plugin-dir"
-        #   }
-        # }
-        container {
+        init_container {
+          name = "${var.project}-config"
+          image = var.jenkins_docker_image
+          # this env variable is for omit the initial septup of jenkins and installation of complements
+          # env {
+          #   name = "JAVA_OPTS"
+          #   value = "-Djenkins.install.runSetupWizard=false"
+          # }
+          port {
+            name = "http-port"
+            container_port = "8080"
+          }
+          port {
+            name = "jnlp-port"
+            container_port = "50000"
+          }
+          volume_mount {
+            name = "jenkins-home"
+            mount_path =  "/var/jenkins_home"
+          }
+        }
+        init_container {
           name = "${var.project}-sidecar-config"
           image = var.jenkins_sidecar_image
           image_pull_policy = "Always"
@@ -79,10 +67,6 @@ resource "kubernetes_deployment" "jenkins-master" {
           }
         }
         container {
-          args = [ 
-           "--argumentsRealm.passwd.$(ADMIN_USER)=$(ADMIN_PASSWORD)",
-           "--argumentsRealm.roles.$(ADMIN_USER)=admin" 
-          ]
           name = var.project
           image = var.jenkins_docker_image
           # this env variable is for omit the initial septup of jenkins and installation of complements
