@@ -26,3 +26,21 @@ variable "webfocus_role" {
   description = "The webfocus role in aws"
   type        = string
 }
+
+variable "jenkins_master_username" {
+  description = "jenkins master node username"
+  type = string
+  default = "adminuser"
+}
+
+variable "jenkins_master_password" {
+  description = "jenkins master node password"
+  type = string
+  sensitive = true
+}
+
+variable "jenkins_docker_image" {
+  description = "jenkins docker image and version"
+  type = string
+  default = "jenkins/jenkins:lts"
+}

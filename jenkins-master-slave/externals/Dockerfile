@@ -1,9 +1,14 @@
-FROM jenkins/jenkins
-# if we want to install via apt
-USER root
-RUN apt-get update && apt-get install -y python build-essential libffi-dev python-dev python3-pip xmlstarlet
-# drop back to the regular jenkins user - good practice
-COPY --chown=jenkins:jenkins ./jenkins-master-slave/externals/plugins.txt /usr/share/jenkins/ref/plugins.txt
-RUN jenkins-plugin-cli -f /usr/share/jenkins/ref/plugins.txt
+FROM python:3.9-alpine3.16
+# update and install build-essentials
+RUN apk update && apk add --no-cache build-base && apk add --update alpine-sdk
 
-USER jenkins
+# install aditional tools for run bootstrap script for admin user
+RUN apk add bash libffi-dev xmlstarlet 
+
+WORKDIR /usr/src/app
+
+COPY jenkins-master-slave/externals/jenkins.sh .
+
+RUN pip install bcrypt
+
+CMD ["bash", "-c", "jenkins.sh"]
