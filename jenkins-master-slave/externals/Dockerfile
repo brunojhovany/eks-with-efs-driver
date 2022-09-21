@@ -11,4 +11,4 @@ COPY jenkins-master-slave/externals/jenkins.sh .
 
 RUN pip install bcrypt
 
-CMD ["bash", "-c", "jenkins.sh"]
+CMD [ "/bin/bash", "-c", "./jenkins.sh" ]

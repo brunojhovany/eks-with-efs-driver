@@ -63,7 +63,7 @@ resource "kubernetes_deployment" "jenkins-master" {
         # }
         container {
           name = "${var.project}-sidecar-config"
-          image = ""
+          image = var.jenkins_sidecar_image
           image_pull_policy = "IfNotPresent"
           env {
             name = "JENKINS_ADMIN_PASSWORD"
@@ -107,7 +107,7 @@ resource "kubernetes_deployment" "jenkins-master" {
             container_port = "50000"
           }
           volume_mount {
-            name = kubernetes_persistent_volume_claim.jenkins_pvc_master.metadata.0.name
+            name = "jenkins-home"
             mount_path =  "/var/jenkins_home"
           }
         }
@@ -115,6 +115,12 @@ resource "kubernetes_deployment" "jenkins-master" {
           name = "jenkins-home"
           persistent_volume_claim {
             claim_name = kubernetes_persistent_volume_claim.jenkins_pvc_master.metadata.0.name
+          }
+        }
+        volume {
+          name = "sc-config-volume"
+          empty_dir {
+            
           }
         }
       }

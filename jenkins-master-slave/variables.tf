@@ -44,3 +44,9 @@ variable "jenkins_docker_image" {
   type = string
   default = "jenkins/jenkins:lts"
 }
+
+variable "jenkins_sidecar_image" {
+  description = "the sidecar container image for bootstrap configuration of jenkins user"
+  type = string
+  default = "jhovanylinkin/jenkins-sidecar-config"
+}
