@@ -38,7 +38,7 @@ EOF
   # Wait till /var/lib/jenkins/users/admin* folder gets created
   sleep 10
 
-  cd /var/lib/jenkins/users/admin*
+  cd /var/jenkins_home/users/admin*
   pwd
   while (( 1 )); do
       echo "Waiting for Jenkins to generate admin user's config file ..."
@@ -66,14 +66,14 @@ function configure_jenkins_server ()
 {
   # Jenkins cli
   echo "installing the Jenkins cli ..."
-  wget http://127.0.0.1:8080/jnlpJars/jenkins-cli.jar -O /var/lib/jenkins/jenkins-cli.jar
+  wget http://127.0.0.1:8080/jnlpJars/jenkins-cli.jar -O /var/jenkins_home/jenkins-cli.jar
 
   # Getting initial password
   # PASSWORD=$(cat /var/lib/jenkins/secrets/initialAdminPassword)
   PASSWORD="${JENKINS_ADMIN_PASSWORD}"
   sleep 10
 
-  jenkins_dir="/var/lib/jenkins"
+  jenkins_dir="/var/jenkins_home"
   plugins_dir="$jenkins_dir/plugins"
 
   cd $jenkins_dir

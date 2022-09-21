@@ -28,39 +28,39 @@ resource "kubernetes_deployment" "jenkins-master" {
       
       }
       spec {
-        init_container {
-          name = "copy-defualt-config"
-          image = var.jenkins_docker_image
-          image_pull_policy = "IfNotPresent"
-          command = [ 
-            "sh",
-            "/var/jenkins_config/apply_config.sh"
-          ]
-          env {
-            name = "ADMIN_PASSWORD"
-            value = var.jenkins_master_password
-          }
-          env {
-            name = "ADMIN_USER"
-            value = var.jenkins_master_username
-          }
-          volume_mount {
-            mount_path = "/var/jenkins_home"
-            name = "jenkins-home"
-          }
-          volume_mount {
-            mount_path = "/var/jenkins_config"
-            name = "jenkins-config"
-          }
-          volume_mount {
-            mountPath = "/usr/share/jenkins/ref/secrets/"
-            name = "secrets-dir"
-          }
-          volume_mount {
-            mountPath = "/var/jenkins_plugins"
-            name = "plugin-dir"
-          }
-        }
+        # init_container {
+        #   name = "copy-defualt-config"
+        #   image = var.jenkins_docker_image
+        #   image_pull_policy = "IfNotPresent"
+        #   command = [ 
+        #     "sh",
+        #     "/var/jenkins_config/apply_config.sh"
+        #   ]
+        #   env {
+        #     name = "ADMIN_PASSWORD"
+        #     value = var.jenkins_master_password
+        #   }
+        #   env {
+        #     name = "ADMIN_USER"
+        #     value = var.jenkins_master_username
+        #   }
+        #   volume_mount {
+        #     mount_path = "/var/jenkins_home"
+        #     name = "jenkins-home"
+        #   }
+        #   volume_mount {
+        #     mount_path = "/var/jenkins_config"
+        #     name = "jenkins-config"
+        #   }
+        #   volume_mount {
+        #     mount_path = "/usr/share/jenkins/ref/secrets/"
+        #     name = "secrets-dir"
+        #   }
+        #   volume_mount {
+        #     mount_path = "/var/jenkins_plugins"
+        #     name = "plugin-dir"
+        #   }
+        # }
         container {
           name = "${var.project}-sidecar-config"
           image = ""
@@ -112,7 +112,7 @@ resource "kubernetes_deployment" "jenkins-master" {
           }
         }
         volume {
-          name = kubernetes_persistent_volume_claim.jenkins_pvc_master.metadata.0.name
+          name = "jenkins-home"
           persistent_volume_claim {
             claim_name = kubernetes_persistent_volume_claim.jenkins_pvc_master.metadata.0.name
           }
