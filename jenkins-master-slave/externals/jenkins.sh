@@ -58,7 +58,10 @@ EOF
   xmlstarlet -q ed --inplace -u "/user/properties/hudson.security.HudsonPrivateSecurityRealm_-Details/passwordHash" -v '#jbcrypt:'"$admin_password" config.xml
 
   # Restart
-  systemctl restart jenkins
+  # systemctl restart jenkins
+  echo "installing the Jenkins cli ..."
+  wget http://127.0.0.1:8080/jnlpJars/jenkins-cli.jar -O /var/jenkins_home/jenkins-cli.jar
+  java -jar /var/jenkins_home/jenkins-cli.jar -s http://127.0.0.1:8080 restart
   sleep 10
 }
 

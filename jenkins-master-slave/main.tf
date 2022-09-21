@@ -64,7 +64,7 @@ resource "kubernetes_deployment" "jenkins-master" {
         container {
           name = "${var.project}-sidecar-config"
           image = var.jenkins_sidecar_image
-          image_pull_policy = "IfNotPresent"
+          image_pull_policy = "Always"
           env {
             name = "JENKINS_ADMIN_PASSWORD"
             value = var.jenkins_master_password
