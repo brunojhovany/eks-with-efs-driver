@@ -61,7 +61,8 @@ EOF
   # systemctl restart jenkins
   echo "installing the Jenkins cli ..."
   wget http://127.0.0.1:8080/jnlpJars/jenkins-cli.jar -O /var/jenkins_home/jenkins-cli.jar
-  java -jar /var/jenkins_home/jenkins-cli.jar -s http://127.0.0.1:8080 restart
+  PASSWORD=$(cat /var/lib/jenkins/secrets/initialAdminPassword)
+  java -jar /var/jenkins_home/jenkins-cli.jar -s http://127.0.0.1:8080 -auth admin:$PASSWORD restart
   sleep 10
 }
 
