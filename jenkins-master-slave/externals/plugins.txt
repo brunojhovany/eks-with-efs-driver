@@ -46,3 +46,7 @@ credentials-binding:523.vd859a_4b_122e6
 docker-java-api:3.2.13-37.vf3411c9828b9
 command-launcher:84.v4a_97f2027398
 credentials:1143.vb_e8b_b_ceee347
+authorize-project:latest
+configuration-as-code:latest
+
+

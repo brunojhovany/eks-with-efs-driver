@@ -2,12 +2,14 @@
 
 set -x
 
+
+
 function wait_for_jenkins()
 {
   while (( 1 )); do
       echo "waiting for Jenkins to launch on port [8080] ..."
       
-      nc -zv 127.0.0.1 8080
+      nc -zv $JENKINS_HOST 8080
       if (( $? == 0 )); then
           break
       fi
@@ -61,7 +63,7 @@ EOF
   # systemctl restart jenkins
   echo "Waiting for installing the Jenkins cli ..."
   while (( 1 )); do
-      wget http://127.0.0.1:8080/jnlpJars/jenkins-cli.jar -O /var/jenkins_home/jenkins-cli.jar
+      wget http://$JENKINS_HOST:8080/jnlpJars/jenkins-cli.jar -O /var/jenkins_home/jenkins-cli.jar
       if [[ -f "/var/jenkins_home/jenkins-cli.jar" ]]; then
           break
           echo "jenkins cli already installed"
@@ -78,7 +80,7 @@ EOF
   done
 
   PASSWORD=$(cat /var/jenkins_home/secrets/initialAdminPassword)
-  java -jar /var/jenkins_home/jenkins-cli.jar -s http://127.0.0.1:8080 -auth admin:$PASSWORD restart
+  java -jar /var/jenkins_home/jenkins-cli.jar -s http://$JENKINS_HOST:8080 -auth admin:$PASSWORD restart
   sleep 10
 }
 
@@ -86,7 +88,7 @@ function configure_jenkins_server ()
 {
   # Jenkins cli
   echo "installing the Jenkins cli ..."
-  wget http://127.0.0.1:8080/jnlpJars/jenkins-cli.jar -O /var/jenkins_home/jenkins-cli.jar
+  wget http://$JENKINS_HOST:8080/jnlpJars/jenkins-cli.jar -O /var/jenkins_home/jenkins-cli.jar
 
   # Getting initial password
   # PASSWORD=$(cat /var/lib/jenkins/secrets/initialAdminPassword)
@@ -111,11 +113,11 @@ function configure_jenkins_server ()
 
   for plugin in $plugin_list; do
       echo "installing plugin [$plugin] ..."
-      java -jar $jenkins_dir/jenkins-cli.jar -s http://127.0.0.1:8080/ -auth admin:$PASSWORD install-plugin $plugin
+      java -jar $jenkins_dir/jenkins-cli.jar -s http://$JENKINS_HOST:8080/ -auth admin:$PASSWORD install-plugin $plugin
   done
 
   # Restart jenkins after installing plugins
-  java -jar $jenkins_dir/jenkins-cli.jar -s http://127.0.0.1:8080 -auth admin:$PASSWORD safe-restart
+  java -jar $jenkins_dir/jenkins-cli.jar -s http://$JENKINS_HOST:8080 -auth admin:$PASSWORD safe-restart
 }
 
 ### script starts here ###

@@ -8,6 +8,26 @@ resource "kubernetes_namespace" "jenkins" {
   }
 }
 
+resource "kubernetes_config_map" "plugins" {
+  metadata {
+    name = "${var.project}-plugins"
+    namespace = kubernetes_namespace.jenkins.metadata.0.name
+  }
+  data = {
+    "plugins.txt" = "${file("${path.module}/externals/plugins.txt")}"
+  }
+}
+
+resource "kubernetes_config_map" "casc_config" {
+  metadata {
+    name = "${var.project}-casc-config"
+    namespace = kubernetes_namespace.jenkins.metadata.0.name
+  }
+  data = {
+    "casc.yaml" = "${file("${path.module}/externals/casc.yaml")}"
+  }  
+}
+
 resource "kubernetes_deployment" "jenkins-master" {
   metadata {
     name = "${var.project}-master"
@@ -25,45 +45,19 @@ resource "kubernetes_deployment" "jenkins-master" {
         labels = {
           app = "${var.project}-master"
         }
-      
       }
       spec {
         init_container {
-          name = "${var.project}-config"
+          name = "${var.project}-install-plugins"
           image = var.jenkins_docker_image
-          # this env variable is for omit the initial septup of jenkins and installation of complements
-          # env {
-          #   name = "JAVA_OPTS"
-          #   value = "-Djenkins.install.runSetupWizard=false"
-          # }
-          port {
-            name = "http-port"
-            container_port = "8080"
-          }
-          port {
-            name = "jnlp-port"
-            container_port = "50000"
-          }
+          command = [ "jenkins-plugin-cli", "-f", "/usr/share/jenkins/ref/plugins.txt", "-d", "/var/jenkins_home/plugins"]
           volume_mount {
             name = "jenkins-home"
             mount_path =  "/var/jenkins_home"
           }
-        }
-        init_container {
-          name = "${var.project}-sidecar-config"
-          image = var.jenkins_sidecar_image
-          image_pull_policy = "Always"
-          env {
-            name = "JENKINS_ADMIN_PASSWORD"
-            value = var.jenkins_master_password
-          }
           volume_mount {
-            mount_path = "/var/jenkins_home/casc_configs"
-            name = "sc-config-volume"
-          }
-          volume_mount {
-            mount_path = "/var/jenkins_home"
-            name = "jenkins-home"
+            name = "jenkins-plugins"
+            mount_path = "/usr/share/jenkins/ref"
           }
         }
         container {
@@ -74,10 +68,6 @@ resource "kubernetes_deployment" "jenkins-master" {
           #   name = "JAVA_OPTS"
           #   value = "-Djenkins.install.runSetupWizard=false"
           # }
-          env {
-            name = "ADMIN_USER"
-            value = var.jenkins_master_username
-          }
           env {
             name = "ADMIN_PASSWORD"
             value = var.jenkins_master_password
@@ -102,13 +92,41 @@ resource "kubernetes_deployment" "jenkins-master" {
           }
         }
         volume {
-          name = "sc-config-volume"
-          empty_dir {
-            
+          name = "jenkins-plugins"
+          config_map {
+            name = kubernetes_config_map.plugins.metadata.0.name
           }
         }
       }
     }
+  }
+}
+
+
+resource "kubernetes_job" "jenkins_bootstrap_config" {
+  metadata {
+    name = "${var.project}-jenkins-bootstrap-config"
+    namespace = kubernetes_namespace.jenkins.metadata.0.name
+  }
+  spec {
+    template {
+      metadata {
+        app = "jenkins-bootstrap-config"
+      }
+      spec {
+        container {
+          name    = "jenkins-bootstrap-config"
+          image   = var.jenkins_sidecar_image
+          command = ["/bin/bash", "-c", "./jenkins.sh"]
+          env {
+            name = "JENKINS_HOST"
+            value = "jenkins-master.jenkins"
+          }
+        }
+        restart_policy = "Never"
+      }
+    }
+    backoff_limit = 4
   }
 }
 
@@ -184,6 +202,8 @@ resource "kubernetes_service" "jenkins-master" {
     }
   }
 }
+
+
 
 
 # EKS Cluster IAM Role

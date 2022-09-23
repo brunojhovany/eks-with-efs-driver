@@ -5,10 +5,11 @@ RUN apk update && apk add --no-cache build-base && apk add --update alpine-sdk
 # install aditional tools for run bootstrap script for admin user
 RUN apk add bash libffi-dev xmlstarlet openjdk11
 
-WORKDIR /usr/src/app
+WORKDIR /var/jenkins_home
 
 COPY jenkins-master-slave/externals/jenkins.sh .
 
 RUN pip install bcrypt
 
-CMD [ "/bin/bash", "-c", "./jenkins.sh" ]
+
+# CMD [ "/bin/bash", "-c", "./jenkins.sh" ]
