@@ -110,9 +110,7 @@ resource "kubernetes_job" "jenkins_bootstrap_config" {
   }
   spec {
     template {
-      metadata {
-        app = "jenkins-bootstrap-config"
-      }
+      metadata {}
       spec {
         container {
           name    = "jenkins-bootstrap-config"
@@ -122,12 +120,29 @@ resource "kubernetes_job" "jenkins_bootstrap_config" {
             name = "JENKINS_HOST"
             value = "jenkins-master.jenkins"
           }
+          env {
+            name = "JENKINS_ADMIN_PASSWORD"
+            value = var.jenkins_master_password
+          }
+          volume_mount {
+            name = "jenkins-home"
+            mount_path =  "/var/jenkins_home"
+          }
+        }
+        volume {
+          name = "jenkins-home"
+          persistent_volume_claim {
+            claim_name = kubernetes_persistent_volume_claim.jenkins_pvc_master.metadata.0.name
+          }
         }
         restart_policy = "Never"
       }
     }
     backoff_limit = 4
   }
+  depends_on = [
+    kubernetes_deployment.jenkins-master
+  ]
 }
 
 

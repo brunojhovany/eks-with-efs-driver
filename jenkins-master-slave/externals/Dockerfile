@@ -5,7 +5,7 @@ RUN apk update && apk add --no-cache build-base && apk add --update alpine-sdk
 # install aditional tools for run bootstrap script for admin user
 RUN apk add bash libffi-dev xmlstarlet openjdk11
 
-WORKDIR /var/jenkins_home
+WORKDIR /usr/src/app
 
 COPY jenkins-master-slave/externals/jenkins.sh .
 
