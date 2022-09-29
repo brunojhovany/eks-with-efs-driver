@@ -50,6 +50,21 @@ resource "aws_security_group" "tf-efs-sg" {
   }
 }
 
+resource "kubernetes_storage_class" "efs_storage_class" {
+  metadata {
+    name = "efs-sc"
+  }
+  storage_provisioner = "efs.csi.aws.com"
+  parameters = {
+    provisioningMode = "efs-ap"
+    fileSystemId = aws_efs_file_system.eks_efs_fs.id
+    directoryPerms = "700"
+    gidRangeStart = "1000" # optional
+    gidRangeEnd = "2000" # optional
+    basePath = "/dynamic_provisioning" # optional
+  }
+}
+
 
 module "efs_csi_driver" {
   source = "git::https://github.com/DNXLabs/terraform-aws-eks-efs-csi-driver.git"

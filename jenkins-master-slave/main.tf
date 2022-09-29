@@ -18,7 +18,7 @@ resource "kubernetes_config_map" "plugins" {
   }
 }
 
-resource "kubernetes_config_map" "casc_config" {
+resource "kubernetes_config_map" "casc_file" {
   metadata {
     name = "${var.project}-casc-config"
     namespace = kubernetes_namespace.jenkins.metadata.0.name
@@ -47,6 +47,7 @@ resource "kubernetes_deployment" "jenkins-master" {
         }
       }
       spec {
+        # In this step we install plugins
         init_container {
           name = "${var.project}-install-plugins"
           image = var.jenkins_docker_image
@@ -64,13 +65,17 @@ resource "kubernetes_deployment" "jenkins-master" {
           name = var.project
           image = var.jenkins_docker_image
           # this env variable is for omit the initial septup of jenkins and installation of complements
-          # env {
-          #   name = "JAVA_OPTS"
-          #   value = "-Djenkins.install.runSetupWizard=false"
-          # }
+          env {
+            name = "JAVA_OPTS"
+            value = "-Djenkins.install.runSetupWizard=false"
+          }
           env {
             name = "ADMIN_PASSWORD"
             value = var.jenkins_master_password
+          }
+          env {
+            name = "CASC_JENKINS_CONFIG"
+            value = "/var/jenkins_home/casc_config/casc.yaml"
           }
           port {
             name = "http-port"
@@ -83,6 +88,10 @@ resource "kubernetes_deployment" "jenkins-master" {
           volume_mount {
             name = "jenkins-home"
             mount_path =  "/var/jenkins_home"
+          }
+          volume_mount {
+            name = "jenkins-casc"
+            mount_path =  "/var/jenkins_home/casc_config"
           }
         }
         volume {
@@ -97,52 +106,22 @@ resource "kubernetes_deployment" "jenkins-master" {
             name = kubernetes_config_map.plugins.metadata.0.name
           }
         }
+        volume {
+          name = "jenkins-casc"
+          config_map {
+            name = kubernetes_config_map.casc_file.metadata.0.name
+          }
+        }
       }
     }
   }
 }
 
-
-resource "kubernetes_job" "jenkins_bootstrap_config" {
+resource "kubernetes_service_account" "jenkins-master" {
   metadata {
-    name = "${var.project}-jenkins-bootstrap-config"
+    name = "${var.project}-master"
     namespace = kubernetes_namespace.jenkins.metadata.0.name
   }
-  spec {
-    template {
-      metadata {}
-      spec {
-        container {
-          name    = "jenkins-bootstrap-config"
-          image   = var.jenkins_sidecar_image
-          command = ["/bin/bash", "-c", "./jenkins.sh"]
-          env {
-            name = "JENKINS_HOST"
-            value = "jenkins-master.jenkins"
-          }
-          env {
-            name = "JENKINS_ADMIN_PASSWORD"
-            value = var.jenkins_master_password
-          }
-          volume_mount {
-            name = "jenkins-home"
-            mount_path =  "/var/jenkins_home"
-          }
-        }
-        volume {
-          name = "jenkins-home"
-          persistent_volume_claim {
-            claim_name = kubernetes_persistent_volume_claim.jenkins_pvc_master.metadata.0.name
-          }
-        }
-        restart_policy = "Never"
-      }
-    }
-    backoff_limit = 4
-  }
-  depends_on = [
-    kubernetes_deployment.jenkins-master
-  ]
 }
 
 
@@ -152,27 +131,27 @@ resource "kubernetes_role" "jenkins-role" {
     namespace = kubernetes_namespace.jenkins.metadata.0.name
   }
   rule {
-    api_groups = [ "" ]
+    api_groups = [ "*" ]
     resources = [ "pods" ]
     verbs = [ "create","delete","get","list","patch","update","watch" ]
   }
   rule {
-    api_groups = [ "" ]
+    api_groups = [ "*" ]
     resources = [ "pods/exec" ]
     verbs = [ "create","delete","get","list","patch","update","watch" ]
   }
   rule {
-    api_groups = [ "" ]
+    api_groups = [ "*" ]
     resources = [ "pods/log" ]
     verbs = ["get","list","watch" ]
   }
   rule {
-    api_groups = [ "" ]
+    api_groups = [ "*" ]
     resources = [ "events" ]
     verbs = [ "get","list","watch" ]
   }
   rule {
-    api_groups = [ "" ]
+    api_groups = [ "*" ]
     resources = [ "secrets" ]
     verbs = [ "get" ]
   }
@@ -191,6 +170,7 @@ resource "kubernetes_role_binding" "jenkins-master-rb" {
   subject {
     kind = "ServiceAccount"
     name = kubernetes_role.jenkins-role.metadata.0.name
+    namespace = kubernetes_namespace.jenkins.metadata.0.name
   }
 }
 
@@ -217,53 +197,3 @@ resource "kubernetes_service" "jenkins-master" {
     }
   }
 }
-
-
-
-
-# EKS Cluster IAM Role
-/* resource "aws_iam_role" "jenkins_master" {
-  name = "${var.project}-role"
-
-  assume_role_policy = <<POLICY
-    {
-        "Version": "2012-10-17",
-        "Statement": [
-            {
-                "Effect": "Allow",
-                "Action": [
-                    "cloudformation:CreateUploadBucket",
-                    "cloudformation:ListStacks",
-                    "cloudformation:CancelUpdateStack",
-                    "cloudformation:ExecuteChangeSet",
-                    "cloudformation:ListChangeSets",
-                    "cloudformation:ListStackResources",
-                    "cloudformation:DescribeStackResources",
-                    "cloudformation:DescribeStackResource",
-                    "cloudformation:CreateChangeSet",
-                    "cloudformation:DeleteChangeSet",
-                    "cloudformation:DescribeStacks",
-                    "cloudformation:ContinueUpdateRollback",
-                    "cloudformation:DescribeStackEvents",
-                    "cloudformation:CreateStack",
-                    "cloudformation:DeleteStack",
-                    "cloudformation:UpdateStack",
-                    "cloudformation:DescribeChangeSet",
-                    "s3:PutBucketPublicAccessBlock",
-                    "s3:CreateBucket",
-                    "s3:DeleteBucketPolicy",
-                    "s3:PutEncryptionConfiguration",
-                    "s3:PutBucketPolicy",
-                    "s3:DeleteBucket"
-                ],
-                "Resource": "*"
-            }
-        ]
-    }
-POLICY
-} */
-
-/* resource "aws_iam_role_policy_attachment" "jenkins_AWSCloudFormationStackExecutionRole" {
-  policy_arn = "arn:aws:iam::aws:policy/AWSCloudFormationStackExecutionRole"
-  role       = aws_iam_role.jenkins_master.name
-} */

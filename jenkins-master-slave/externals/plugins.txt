@@ -48,5 +48,6 @@ command-launcher:84.v4a_97f2027398
 credentials:1143.vb_e8b_b_ceee347
 authorize-project:latest
 configuration-as-code:latest
+matrix-auth:3.1.5
 
 

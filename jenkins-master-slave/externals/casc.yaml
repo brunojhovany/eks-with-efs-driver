@@ -3,17 +3,26 @@ jenkins:
     local:
       allowsSignup: false
       users:
-       - id: admin
-         password: ${ADMIN_PASSWORD}
+        - id: "admin"
+          name: "Admin"
+          description: "admin user of casc"
+          password: ${ADMIN_PASSWORD}
+          properties:
+            - mailer:
+                emailAddress: "example@example.com"
+            - preferredProvider:
+                providerId: "default"
+            - timezone:
+                timeZoneName: "America/Mexico_City"
   authorizationStrategy:
     globalMatrix:
       permissions:
         - "Overall/Administer:admin"
         - "Overall/Read:authenticated"
-  remotingSecurity:
-    enabled: true
 security:
   queueItemAuthenticator:
+    authenticators:
+    - global:
+        strategy: triggeringUsersAuthorizationStrategy
 
-
-  
+  # authorizationStrategy: loggedInUsersCanDoAnything
