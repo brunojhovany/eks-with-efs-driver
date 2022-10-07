@@ -25,7 +25,7 @@ resource "aws_eks_cluster" "this" {
 
 # Fetch OIDC provider thumbprint for root CA
 data "external" "thumbprint" {
-  program = ["${path.module}/oidc-thumbprint.sh", var.region ]
+  program = ["${path.module}/oidc-thumbprint.sh", var.region]
   depends_on = [
     aws_eks_cluster.this
   ]

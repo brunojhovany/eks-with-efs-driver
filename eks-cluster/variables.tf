@@ -39,7 +39,7 @@ variable "tags" {
 }
 
 variable "oidc_thumbprint_list" {
-  type    = list
+  type    = list(any)
   default = []
 }
 

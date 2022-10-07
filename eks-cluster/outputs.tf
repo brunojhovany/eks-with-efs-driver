@@ -52,11 +52,25 @@ KUBECONFIG
 }
 
 resource "local_file" "kubeconfig" {
-  filename = "../${path.module}/kubeconfig"
-  content  = local.kubeconfig
+  filename        = "../${path.module}/kubeconfig"
+  content         = local.kubeconfig
   file_permission = "400"
 }
 
 output "eks_efs_fs_fsid" {
   value = aws_efs_file_system.eks_efs_fs.id
+}
+
+output "eks_vpc_id" {
+  value = aws_vpc.this.id
+  description = "vpc id"
+}
+
+output "eks_cidr" {
+  value = flatten([cidrsubnet(var.vpc_cidr, var.subnet_cidr_bits, 0), cidrsubnet(var.vpc_cidr, var.subnet_cidr_bits, 1), cidrsubnet(var.vpc_cidr, var.subnet_cidr_bits, 2), cidrsubnet(var.vpc_cidr, var.subnet_cidr_bits, 3)])
+  description = "cidr of vpc"
+}
+
+output "eks_subnet_private" {
+  value = [for e in aws_subnet.private.*.id: e]
 }
